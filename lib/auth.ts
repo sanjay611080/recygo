@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { readUsers } from "./storage";
+import { getUserByUsername } from "./storage";
 import type { User } from "./types";
 
 const COOKIE_NAME = "recygo_session";
@@ -23,8 +23,7 @@ export async function getCurrentUser(): Promise<User | null> {
   const store = await cookies();
   const username = store.get(COOKIE_NAME)?.value;
   if (!username) return null;
-  const users = await readUsers();
-  return users.find((u) => u.username === username) ?? null;
+  return getUserByUsername(username);
 }
 
 export async function requireUser(): Promise<User> {

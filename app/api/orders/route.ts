@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getCurrentUser } from "@/lib/auth";
 import {
-  readOrders,
-  readProducts,
-  readUsers,
-  writeOrders,
-  writeUsers,
+  createOrder,
+  incrementUserTokens,
+  listProducts,
 } from "@/lib/storage";
 import type { Order, OrderItem } from "@/lib/types";
 
@@ -28,7 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
-  const products = await readProducts();
+  const products = await listProducts();
   const orderItems: OrderItem[] = [];
   let subtotal = 0;
   for (const it of items) {
@@ -63,19 +61,10 @@ export async function POST(req: Request) {
     createdAt: new Date().toISOString(),
   };
 
-  const orders = await readOrders();
-  orders.push(order);
-  await writeOrders(orders);
+  const saved = await createOrder(order);
+  const newTokens = tokensUsed > 0
+    ? await incrementUserTokens(user.username, -tokensUsed)
+    : user.tokens;
 
-  const users = await readUsers();
-  const idx = users.findIndex((u) => u.username === user.username);
-  if (idx !== -1) {
-    users[idx] = { ...users[idx], tokens: users[idx].tokens - tokensUsed };
-    await writeUsers(users);
-  }
-
-  return NextResponse.json({
-    order,
-    tokens: users[idx]?.tokens ?? user.tokens - tokensUsed,
-  });
+  return NextResponse.json({ order: saved, tokens: newTokens });
 }

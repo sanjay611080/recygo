@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { setSession } from "@/lib/auth";
-import { readUsers } from "@/lib/storage";
+import { getUserByCredentials } from "@/lib/storage";
 
 export async function POST(req: Request) {
   const { username, password } = (await req.json()) as {
@@ -10,10 +10,7 @@ export async function POST(req: Request) {
   if (!username || !password) {
     return NextResponse.json({ error: "Missing credentials" }, { status: 400 });
   }
-  const users = await readUsers();
-  const match = users.find(
-    (u) => u.username === username && u.password === password,
-  );
+  const match = await getUserByCredentials(username, password);
   if (!match) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }

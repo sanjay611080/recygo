@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getCurrentUser } from "@/lib/auth";
-import { readSessions, readUsers, writeSessions, writeUsers } from "@/lib/storage";
+import {
+  createSession,
+  incrementUserTokens,
+  listSessions,
+} from "@/lib/storage";
 import { uploadDataUrl } from "@/lib/supabase";
 import type { SessionEntry } from "@/lib/types";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
-  const sessions = await readSessions();
-  const visible =
-    user.role === "admin"
-      ? sessions
-      : sessions.filter((s) => s.username === user.username);
-  visible.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return NextResponse.json({ sessions: visible });
+  const sessions = await listSessions(
+    user.role === "admin" ? undefined : user.username,
+  );
+  return NextResponse.json({ sessions });
 }
 
 interface IncomingPhoto {
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const entry: SessionEntry = {
+  const entry = await createSession({
     id,
     username: user.username,
     category,
@@ -69,21 +70,9 @@ export async function POST(req: Request) {
     tokensEarned,
     photos: uploaded,
     createdAt,
-  };
-
-  const sessions = await readSessions();
-  sessions.push(entry);
-  await writeSessions(sessions);
-
-  const users = await readUsers();
-  const idx = users.findIndex((u) => u.username === user.username);
-  if (idx !== -1) {
-    users[idx] = { ...users[idx], tokens: users[idx].tokens + tokensEarned };
-    await writeUsers(users);
-  }
-
-  return NextResponse.json({
-    session: entry,
-    tokens: users[idx]?.tokens ?? user.tokens + tokensEarned,
   });
+
+  const newTokens = await incrementUserTokens(user.username, tokensEarned);
+
+  return NextResponse.json({ session: entry, tokens: newTokens });
 }

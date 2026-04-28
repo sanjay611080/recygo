@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { readUsers, writeUsers } from "@/lib/storage";
-import type { Role, User } from "@/lib/types";
+import { createUser, deleteUser, listUsers, userExists } from "@/lib/storage";
+import type { Role } from "@/lib/types";
 
 async function ensureAdmin() {
   const me = await getCurrentUser();
@@ -14,7 +14,7 @@ async function ensureAdmin() {
 export async function GET() {
   const { error } = await ensureAdmin();
   if (error) return error;
-  const users = await readUsers();
+  const users = await listUsers();
   return NextResponse.json({
     users: users.map((u) => ({
       username: u.username,
@@ -40,19 +40,10 @@ export async function POST(req: Request) {
   if (!username || !password) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
-  const users = await readUsers();
-  if (users.some((u) => u.username === username)) {
+  if (await userExists(username)) {
     return NextResponse.json({ error: "Username already exists" }, { status: 409 });
   }
-  const newUser: User = {
-    username,
-    password,
-    role,
-    tokens: 0,
-    createdAt: new Date().toISOString(),
-  };
-  users.push(newUser);
-  await writeUsers(users);
+  const newUser = await createUser({ username, password, role });
   return NextResponse.json({
     user: {
       username: newUser.username,
@@ -77,11 +68,9 @@ export async function DELETE(req: Request) {
       { status: 400 },
     );
   }
-  const users = await readUsers();
-  const next = users.filter((u) => u.username !== username);
-  if (next.length === users.length) {
+  const removed = await deleteUser(username);
+  if (!removed) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  await writeUsers(next);
   return NextResponse.json({ ok: true });
 }
