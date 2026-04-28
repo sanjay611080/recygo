@@ -1,0 +1,44 @@
+[
+  {
+    "id": "p-towel",
+    "name": "Recycled Cotton Towel",
+    "price": 1000,
+    "description": "Soft towel made from 100% post-consumer recycled cotton.",
+    "image": "🧺"
+  },
+  {
+    "id": "p-notebook",
+    "name": "Recycled Paper Notebook",
+    "price": 500,
+    "description": "A5 notebook with 120 pages of recycled paper.",
+    "image": "📓"
+  },
+  {
+    "id": "p-bag",
+    "name": "Recycled Tote Bag",
+    "price": 800,
+    "description": "Durable shopper made from recycled PET bottles.",
+    "image": "👜"
+  },
+  {
+    "id": "p-tshirt",
+    "name": "Recycled Cotton T-Shirt",
+    "price": 1500,
+    "description": "Unisex tee, 60% recycled cotton + 40% recycled poly.",
+    "image": "👕"
+  },
+  {
+    "id": "p-pot",
+    "name": "Recycled Plant Pot",
+    "price": 600,
+    "description": "Indoor pot moulded from recycled HDPE caps.",
+    "image": "🪴"
+  },
+  {
+    "id": "p-bottle",
+    "name": "Recycled Glass Bottle",
+    "price": 700,
+    "description": "500ml reusable bottle made from melted scrap glass.",
+    "image": "🍾"
+  }
+]
